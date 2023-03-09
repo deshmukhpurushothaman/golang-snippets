@@ -52,6 +52,7 @@ func main() {
 
 	r := mux.NewRouter()
 	routes.Routes(r)
+	routes.MovieRoutes(r)
 	http.Handle("/", r)
 	err := http.ListenAndServe(fmt.Sprintf(":%d", cfg.port), r)
 
