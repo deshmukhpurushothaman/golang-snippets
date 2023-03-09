@@ -17,6 +17,8 @@ func GetOneMovie(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(movieId)
 	if err != nil {
 		fmt.Println("error while parsing")
+		utils.ErrorJSON(w, err)
+		return
 	}
 
 	fmt.Println("Movie ID", id)
@@ -34,7 +36,7 @@ func GetOneMovie(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:   time.Now(),
 	}
 
-	err = utils.WristJSON(w, http.StatusOK, movie, "movie")
+	err = utils.WriteJSON(w, http.StatusOK, movie, "movie")
 }
 
 func GetAllMovies(w http.ResponseWriter, r *http.Request) {}
