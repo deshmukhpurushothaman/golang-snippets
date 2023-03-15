@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/deshmukhpurushothaman/golang-snippets/golang_react/server/pkg/models"
 	"github.com/deshmukhpurushothaman/golang-snippets/golang_react/server/pkg/routes"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -30,6 +32,13 @@ type AppStatus struct {
 	Version     string `json:"version"`
 }
 
+type application struct {
+	router *mux.Router
+	config config
+	logger *log.Logger
+	models models.Models
+}
+
 func main() {
 	var cfg config
 
@@ -37,6 +46,8 @@ func main() {
 	flag.StringVar(&cfg.env, "env", "development", "Application environment")
 	flag.StringVar(&cfg.db.dsn, "dsn", "postgres://deshmukh:deshmukh@localhost/go_movies?sslmode=disable", "Postgres connection string")
 	flag.Parse()
+
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	fmt.Println("Running")
 
@@ -64,11 +75,17 @@ func main() {
 	}
 	defer db.Close()
 
-	r := mux.NewRouter()
-	routes.Routes(r)
-	routes.MovieRoutes(r)
-	http.Handle("/", r)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.port), r)
+	app := &application{
+		config: cfg,
+		logger: logger,
+		models: models.NewModels(db),
+	}
+
+	app.router = mux.NewRouter()
+	routes.Routes(app.router)
+	app.MovieRoutes()
+	http.Handle("/", app.router)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.port), app.router)
 
 	if err != nil {
 		log.Println(err)
